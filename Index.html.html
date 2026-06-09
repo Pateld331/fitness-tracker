@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--surface:#111;--surface2:#181818;--surface3:#1e1e1e;
+  --border:#222;--border2:#2e2e2e;--text:#f2efe9;--muted:#777;--muted2:#444;
+  --red:#e03535;--red-dim:rgba(224,53,53,0.12);
+  --green:#3aaa6a;--green-dim:rgba(58,170,106,0.12);
+  --amber:#e8a020;--amber-dim:rgba(232,160,32,0.12);
+  --blue:#3a7fd5;--blue-dim:rgba(58,127,213,0.12);
+  --purple:#9b72cf;--purple-dim:rgba(155,114,207,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-weight:300;min-height:100vh;}
+
+/* LOGIN */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px;text-align:center;}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:56px;font-weight:900;letter-spacing:-1px;text-transform:uppercase;margin-bottom:8px;}
+.login-logo span{color:var(--red);}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:48px;letter-spacing:2px;text-transform:uppercase;}
+.login-btn{display:flex;align-items:center;gap:12px;padding:14px 28px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-size:14px;font-family:'Barlow',sans-serif;color:var(--text);transition:all .2s;}
+.login-btn:hover{border-color:var(--red);background:var(--surface2);}
+.login-btn img{width:20px;height:20px;}
+.login-tagline{margin-top:32px;font-size:12px;color:var(--muted2);max-width:320px;line-height:1.8;}
+
+/* APP SHELL */
+.app-shell{display:none;min-height:100vh;}
+.app-shell.visible{display:block;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.topbar-logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:1px;}
+.topbar-logo span{color:var(--red);}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.streak-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--amber-dim);border:1px solid rgba(232,160,32,0.2);border-radius:20px;font-size:12px;font-weight:600;color:var(--amber);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
+.user-avatar{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid var(--border2);}
+.signout-btn{font-size:12px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:4px;border:1px solid var(--border2);background:none;font-family:'Barlow',sans-serif;}
+.signout-btn:hover{color:var(--text);}
+
+/* NAV */
+.nav-bar{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.nav-tab{padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--red);border-bottom-color:var(--red);}
+
+/* PANELS */
+.panel{display:none;padding:28px;max-width:1400px;margin:0 auto;}
+.panel.active{display:block;}
+
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px;}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.dash-card-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.dash-card-val{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;line-height:1;}
+.dash-card-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.dash-card.red .dash-card-val{color:var(--red);}
+.dash-card.green .dash-card-val{color:var(--green);}
+.dash-card.amber .dash-card-val{color:var(--amber);}
+.dash-card.blue .dash-card-val{color:var(--blue);}
+
+/* STREAK DISPLAY */
+.streak-hero{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:28px;text-align:center;position:relative;overflow:hidden;}
+.streak-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(232,160,32,0.08) 0%,transparent 70%);pointer-events:none;}
+.streak-tier-badge{font-size:48px;margin-bottom:8px;}
+.streak-tier-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;text-transform:uppercase;color:var(--amber);letter-spacing:2px;}
+.streak-count{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:900;color:var(--text);line-height:1;margin:8px 0;}
+.streak-label{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.streak-next{margin-top:16px;font-size:12px;color:var(--muted);}
+.streak-next strong{color:var(--amber);}
+.streak-bar-wrap{margin-top:12px;background:var(--border);border-radius:4px;height:4px;overflow:hidden;}
+.streak-bar-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--red));border-radius:4px;transition:width .5s ease;}
+.grace-badge{display:inline-block;margin-top:12px;font-size:11px;padding:4px 12px;border-radius:20px;background:var(--green-dim);color:var(--green);border:1px solid rgba(58,170,106,0.2);}
+
+/* CALENDAR */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;}
+.cal-nav-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:13px;}
+.cal-nav-btn:hover{color:var(--text);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:28px;}
+.cal-day-header{text-align:center;font-size:10px;letter-spacing:1px;color:var(--muted);padding:4px 0;font-weight:600;}
+.cal-day{aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent;position:relative;}
+.cal-day.empty{background:transparent;cursor:default;}
+.cal-day.future{background:var(--surface);color:var(--muted2);}
+.cal-day.incomplete{background:var(--surface);color:var(--muted);border-color:var(--border);}
+.cal-day.complete{background:var(--green-dim);color:var(--green);border-color:rgba(58,170,106,0.2);}
+.cal-day.grace{background:var(--amber-dim);color:var(--amber);border-color:rgba(232,160,32,0.2);}
+.cal-day.partial{background:rgba(58,127,213,0.1);color:var(--blue);border-color:rgba(58,127,213,0.2);}
+.cal-day.today{border-color:var(--red)!important;color:var(--text)!important;}
+.cal-day-num{font-size:13px;font-weight:600;}
+.cal-day-dots{display:flex;gap:2px;margin-top:2px;}
+.cal-dot{width:4px;height:4px;border-radius:50%;}
+
+/* CHECKIN */
+.checkin-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+.checkin-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;margin-bottom:4px;}
+.checkin-date{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.checkin-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.checkin-item:last-child{border-bottom:none;}
+.checkin-item-left{display:flex;align-items:center;gap:12px;}
+.checkin-icon{font-size:18px;width:32px;text-align:center;}
+.checkin-name{font-size:14px;font-weight:500;}
+.checkin-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.checkin-toggle{width:44px;height:24px;border-radius:12px;background:var(--border2);cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0;}
+.checkin-toggle.on{background:var(--green);}
+.checkin-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;left:3px;transition:transform .2s;}
+.checkin-toggle.on::after{transform:translateX(20px);}
+
+/* NOTES */
+.notes-area{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;resize:vertical;min-height:80px;margin-top:12px;}
+.notes-area:focus{outline:none;border-color:var(--red);}
+.save-btn{margin-top:10px;padding:10px 24px;background:var(--red);color:#fff;border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.save-btn:hover{background:#c82a2a;}
+.save-btn.saved{background:var(--green);}
+
+/* MEAL CONFIRM */
+.meal-slot-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.meal-slot-row:last-child{border-bottom:none;}
+.meal-slot-info{flex:1;}
+.meal-slot-type{font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.meal-slot-name{font-size:13px;font-weight:500;color:var(--text);margin-top:2px;}
+.meal-slot-protein{font-size:11px;color:var(--green);margin-top:1px;}
+.meal-confirm-btn{padding:6px 14px;border-radius:6px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s;}
+.meal-confirm-btn.confirmed{background:var(--green-dim);border-color:rgba(58,170,106,0.3);color:var(--green);}
+.meal-confirm-btn:hover:not(.confirmed){border-color:var(--green);color:var(--green);}
+
+/* TRAINING LOG */
+.exercise-log-row{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;}
+.ex-log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ex-log-name{font-size:14px;font-weight:500;}
+.ex-log-planned{font-size:11px;color:var(--muted);}
+.set-inputs{display:flex;gap:8px;flex-wrap:wrap;}
+.set-input-group{display:flex;flex-direction:column;gap:4px;align-items:center;}
+.set-label{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.set-input{width:72px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;text-align:center;}
+.set-input:focus{outline:none;border-color:var(--red);}
+.set-input::placeholder{color:var(--muted2);}
+
+/* BODY COMP */
+.inbody-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.form-input{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;}
+.form-input:focus{outline:none;border-color:var(--red);}
+
+/* CHARTS */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+.chart-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;color:var(--muted);}
+.chart-canvas-wrap{position:relative;width:100%;height:220px;}
+
+/* CONSISTENCY */
+.consistency-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);}
+.consistency-row:last-child{border-bottom:none;}
+.con-date{font-size:12px;color:var(--muted);width:100px;flex-shrink:0;}
+.con-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.con-bar{height:100%;border-radius:3px;transition:width .4s;}
+.con-score{font-size:12px;font-weight:600;width:36px;text-align:right;flex-shrink:0;}
+
+/* SECTION HEADERS */
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.sec-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+
+/* TIER LIST */
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:28px;}
+.tier-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;}
+.tier-card.achieved{border-color:rgba(58,170,106,0.3);background:var(--green-dim);}
+.tier-card.current{border-color:rgba(232,160,32,0.4);background:var(--amber-dim);}
+.tier-emoji{font-size:24px;width:36px;text-align:center;}
+.tier-info{}
+.tier-days{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--text);}
+.tier-name{font-size:11px;color:var(--muted);}
+.tier-check{margin-left:auto;color:var(--green);font-size:16px;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:14px;color:var(--muted);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:12px;}
+.empty-text{font-size:14px;}
+.empty-sub{font-size:12px;color:var(--muted2);margin-top:4px;}
+
+@media(max-width:768px){
+  .panel{padding:16px;}
+  .topbar{padding:0 16px;}
+  .dash-grid{grid-template-columns:repeat(2,1fr);}
+  .streak-count{font-size:56px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading" id="loading">Connecting...</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen" style="display:none;">
+  <div class="login-logo">FITNESS<span>TRACKER</span></div>
+  <div class="login-sub">Wedding Transformation · Apr 2027</div>
+  <button class="login-btn" id="google-signin-btn">
+    <img src="https://www.google.com/favicon.ico" alt="Google">
+    Sign in with Google
+  </button>
+  <p class="login-tagline">Your meals, training, and body composition — all in one place, synced across every device.</p>
+</div>
+
+<!-- APP -->
+<div class="app-shell" id="app-shell">
+  <div class="topbar">
+    <div class="topbar-logo">FITNESS<span>TRACKER</span></div>
+    <div class="topbar-right">
+      <div class="streak-badge" id="topbar-streak">🔥 0 days</div>
+      <img class="user-avatar" id="user-avatar" src="" alt="">
+      <button class="signout-btn" id="signout-btn">Sign out</button>
+    </div>
+  </div>
+  <div class="nav-bar">
+    <button class="nav-tab active" onclick="showPanel('dashboard',this)">Dashboard</button>
+    <button class="nav-tab" onclick="showPanel('checkin',this)">Daily Check-in</button>
+    <button class="nav-tab" onclick="showPanel('meals',this)">Meals</button>
+    <button class="nav-tab" onclick="showPanel('training',this)">Training</button>
+    <button class="nav-tab" onclick="showPanel('body',this)">Body Comp</button>
+    <button class="nav-tab" onclick="showPanel('streaks',this)">Streaks</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="panel-dashboard" class="panel active">
+    <div class="dash-grid" id="dash-stats">
+      <div class="dash-card red"><div class="dash-card-label">Current streak</div><div class="dash-card-val" id="ds-streak">0</div><div class="dash-card-sub">days</div></div>
+      <div class="dash-card green"><div class="dash-card-label">Meals logged</div><div class="dash-card-val" id="ds-meals">0</div><div class="dash-card-sub">this week</div></div>
+      <div class="dash-card amber"><div class="dash-card-label">Workouts done</div><div class="dash-card-val" id="ds-workouts">0</div><div class="dash-card-sub">this week</div></div>
+      <div class="dash-card blue"><div class="dash-card-label">Current weight</div><div class="dash-card-val" id="ds-weight">—</div><div class="dash-card-sub">lbs</div></div>
+      <div class="dash-card"><div class="dash-card-label">Body fat</div><div class="dash-card-val" id="ds-bf">—</div><div class="dash-card-sub">%</div></div>
+      <div class="dash-card"><div class="dash-card-label">Days to wedding</div><div class="dash-card-val" id="ds-days">—</div><div class="dash-card-sub">Apr 26, 2027</div></div>
+    </div>
+
+    <div class="streak-hero" id="streak-hero">
+      <div class="streak-tier-badge" id="sh-badge">💤</div>
+      <div class="streak-tier-name" id="sh-tier">Not started</div>
+      <div class="streak-count" id="sh-count">0</div>
+      <div class="streak-label">Day streak</div>
+      <div class="streak-next" id="sh-next">Complete today's check-in to start your streak</div>
+      <div class="streak-bar-wrap"><div class="streak-bar-fill" id="sh-bar" style="width:0%"></div></div>
+      <div class="grace-badge" id="sh-grace">1 grace skip available this week</div>
+    </div>
+
+    <div class="sec-title">This Month</div>
+    <div class="sec-sub">Click any day to view or edit that day's log</div>
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">← Prev</button>
+      <div class="cal-title" id="cal-month-title">March 2026</div>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">Next →</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+
+    <div class="sec-title">Weekly Consistency</div>
+    <div class="sec-sub">Meal confirmations + training check-ins this week</div>
+    <div id="weekly-consistency"></div>
+  </div>
+
+  <!-- DAILY CHECK-IN -->
+  <div id="panel-checkin" class="panel">
+    <div class="sec-title">Daily Check-in</div>
+    <div class="sec-sub" id="checkin-date-display">Today · Monday, March 30</div>
+
+    <!-- Date picker -->
+    <div style="margin-bottom:20px;display:flex;gap:8px;align-items:center;">
+      <label style="font-size:12px;color:var(--muted);">Log for date:</label>
+      <input type="date" id="checkin-date-picker" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;" />
+    </div>
+
+    <div class="checkin-section">
+      <div class="checkin-title">Meals eaten today</div>
+      <div class="checkin-date" id="ci-meal-date">Confirm each meal you ate</div>
+      <div id="ci-meals-list"></div>
+    </div>
+
+    <div class="checkin-section">
+      <div class="checkin-title">Training</div>
+      <div class="checkin-date">What did you do today?</div>
+      <div class="checkin-item">
+        <div class="checkin-item-left">
+          <div class="checkin-icon">🏋️</div>
+          <div><div class="checkin-name">Gym session</div><div class="checkin-sub">Evening lift</div></div>
+        </div>
+        <button class="checkin-toggle" id="toggle-gym" onclick="toggleCheckin('gym')"></button>
+      </div>
+      <div class="checkin-item">
+        <div class="checkin-item-left">
+          <div class="checkin-icon">🏊</div>
+          <div><div class="checkin-name">Swim session</div><div class="checkin-sub">6:30 AM pool</div></div>
+        </div>
+        <button class="checkin-toggle" id="toggle-swim" onclick="toggleCheckin('swim')"></button>
+      </div>
+      <div class="checkin-item">
+        <div class="checkin-item-left">
+          <div class="checkin-icon">😴</div>
+          <div><div class="checkin-name">Rest day</div><div class="checkin-sub">Planned recovery</div></div>
+        </div>
+        <button class="checkin-toggle" id="toggle-rest" onclick="toggleCheckin('rest')"></button>
+      </div>
+    </div>
+
+    <div class="checkin-section">
+      <div class="checkin-title">Supplements</div>
+      <div class="checkin-item">
+        <div class="checkin-item-left"><div class="checkin-icon">💊</div><div><div class="checkin-name">Creatine 5g</div></div></div>
+        <button class="checkin-toggle" id="toggle-creatine" onclick="toggleCheckin('creatine')"></button>
+      </div>
+      <div class="checkin-item">
+        <div class="checkin-item-left"><div class="checkin-icon">🥛</div><div><div class="checkin-name">Casein shake</div><div class="checkin-sub">Before bed</div></div></div>
+        <button class="checkin-toggle" id="toggle-casein" onclick="toggleCheckin('casein')"></button>
+      </div>
+      <div class="checkin-item">
+        <div class="checkin-item-left"><div class="checkin-icon">💊</div><div><div class="checkin-name">Magnesium glycinate</div></div></div>
+        <button class="checkin-toggle" id="toggle-magnesium" onclick="toggleCheckin('magnesium')"></button>
+      </div>
+    </div>
+
+    <div class="checkin-section">
+      <div class="checkin-title">Daily Notes</div>
+      <div class="checkin-date">Energy level, how you felt, anything worth logging</div>
+      <textarea class="notes-area" id="daily-notes" placeholder="How was today? Energy, mood, sleep quality, anything notable..."></textarea>
+      <button class="save-btn" id="save-checkin-btn" onclick="saveCheckin()">Save Check-in</button>
+    </div>
+  </div>
+
+  <!-- MEALS PANEL -->
+  <div id="panel-meals" class="panel">
+    <div class="sec-title">Meal Planner</div>
+    <div class="sec-sub">Plan your week · Confirm daily meals · Track consistency</div>
+
+    <div style="margin-bottom:20px;">
+      <div class="sec-title" style="font-size:18px;">This Week's Plan</div>
+      <div id="weekly-meal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px;"></div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div class="sec-title" style="font-size:18px;">Meal Confirmation Log</div>
+      <div class="sec-sub">All confirmed meals this week</div>
+      <div id="meal-log-list"></div>
+    </div>
+  </div>
+
+  <!-- TRAINING PANEL -->
+  <div id="panel-training" class="panel">
+    <div class="sec-title">Training Log</div>
+    <div class="sec-sub">Log your weights and sets for each session</div>
+
+    <div style="margin-bottom:20px;display:flex;gap:8px;align-items:center;">
+      <label style="font-size:12px;color:var(--muted);">Session date:</label>
+      <input type="date" id="training-date-picker" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;" />
+      <select id="training-type-select" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;">
+        <option value="push">Push — Chest / Shoulders / Tris</option>
+        <option value="pull">Pull — Back / Biceps</option>
+        <option value="legs">Legs — Quads / Hams / Glutes</option>
+        <option value="upper">Upper — Hypertrophy</option>
+        <option value="swim">Swim Session</option>
+        <option value="rest">Rest Day</option>
+      </select>
+      <button onclick="loadTrainingLog()" style="padding:6px 16px;background:var(--red);border:none;border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;font-size:13px;cursor:pointer;">Load</button>
+    </div>
+
+    <div id="training-log-content"></div>
+
+    <div style="margin-top:32px;">
+      <div class="sec-title" style="font-size:18px;">Lift History</div>
+      <div class="sec-sub">Week over week progression</div>
+      <div id="lift-history"></div>
+    </div>
+  </div>
+
+  <!-- BODY COMP -->
+  <div id="panel-body" class="panel">
+    <div class="sec-title">Body Composition</div>
+    <div class="sec-sub">Log your weekly InBody scan · Track your transformation</div>
+
+    <div class="checkin-section">
+      <div class="checkin-title">Log InBody Scan</div>
+      <div class="checkin-date">Enter your latest scan results</div>
+      <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;color:var(--muted);">Scan date:</label>
+        <input type="date" id="scan-date" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;" />
+      </div>
+      <div class="inbody-form">
+        <div class="form-field"><label class="form-label">Weight (lbs)</label><input class="form-input" type="number" step="0.1" id="inp-weight" placeholder="198.9"></div>
+        <div class="form-field"><label class="form-label">Body Fat %</label><input class="form-input" type="number" step="0.1" id="inp-bf" placeholder="32.6"></div>
+        <div class="form-field"><label class="form-label">Muscle Mass (lbs)</label><input class="form-input" type="number" step="0.1" id="inp-muscle" placeholder="75.6"></div>
+        <div class="form-field"><label class="form-label">InBody Score</label><input class="form-input" type="number" id="inp-score" placeholder="60"></div>
+        <div class="form-field"><label class="form-label">Body Fat Mass (lbs)</label><input class="form-input" type="number" step="0.1" id="inp-fatmass" placeholder="64.8"></div>
+      </div>
+      <button class="save-btn" onclick="saveBodyScan()">Save Scan</button>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Weight (lbs)</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-weight"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Body Fat %</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-bf"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Muscle Mass (lbs)</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-muscle"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">InBody Score</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-score"></canvas></div>
+    </div>
+
+    <div class="sec-title" style="margin-top:8px;">Scan History</div>
+    <div id="scan-history-list"></div>
+  </div>
+
+  <!-- STREAKS -->
+  <div id="panel-streaks" class="panel">
+    <div class="sec-title">Streak Tiers</div>
+    <div class="sec-sub">Complete meals + training + check-in each day to build your streak</div>
+
+    <div class="streak-hero" style="margin-bottom:28px;">
+      <div class="streak-tier-badge" id="sp-badge">💤</div>
+      <div class="streak-tier-name" id="sp-tier">Not started</div>
+      <div class="streak-count" id="sp-count">0</div>
+      <div class="streak-label">Day streak</div>
+      <div class="streak-next" id="sp-next"></div>
+      <div class="streak-bar-wrap"><div class="streak-bar-fill" id="sp-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="sec-title" style="font-size:18px;margin-bottom:12px;">All Tiers</div>
+    <div class="tier-grid" id="tier-grid"></div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ─── FIREBASE CONFIG ───────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBLlhe1iX_MrUqko4ZbdauKMPogLz60Gkg",
+  authDomain: "dp-fitness-tracker.firebaseapp.com",
+  projectId: "dp-fitness-tracker",
+  storageBucket: "dp-fitness-tracker.firebasestorage.app",
+  messagingSenderId: "623450856637",
+  appId: "1:623450856637:web:c5209edefd42c3ef1cabd4"
+};
+
+const FIREBASE_OK = (typeof firebase !== 'undefined');
+let auth = null, db = null;
+
+if (!FIREBASE_OK) {
+  document.getElementById('loading').innerHTML =
+    '<div style="text-align:center;padding:40px;max-width:400px;">' +
+    '<div style="font-size:32px;margin-bottom:16px;">⚠️</div>' +
+    '<div style="font-size:15px;color:#f2efe9;margin-bottom:12px;">Firebase couldn\'t load</div>' +
+    '<div style="font-size:13px;color:#777;line-height:1.7;">This usually means you\'re viewing the preview inside an app. ' +
+    'Open this page directly in a browser on your hosted GitHub Pages URL (https://pateld331.github.io/fitness-tracker) and it will work.</div></div>';
+} else {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+}
+
+// ─── STATE ─────────────────────────────────────────────────────────
+let currentUser = null;
+let userDoc = null;
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+let checkinData = {};
+let checkinDate = todayStr();
+let bodyScans = [];
+let charts = {};
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatDate(str) {
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+}
+
+// ─── STREAK TIERS ──────────────────────────────────────────────────
+const TIERS = [
+  {days:3,   emoji:'🔥', name:'On Fire'},
+  {days:7,   emoji:'⚡', name:'Electric'},
+  {days:14,  emoji:'💪', name:'Locked In'},
+  {days:21,  emoji:'🎯', name:'Momentum'},
+  {days:30,  emoji:'🏆', name:'Unstoppable'},
+  {days:45,  emoji:'🔩', name:'Iron Will'},
+  {days:60,  emoji:'👑', name:'Elite'},
+  {days:75,  emoji:'⚔️', name:'Relentless'},
+  {days:90,  emoji:'💎', name:'Diamond'},
+  {days:120, emoji:'🌟', name:'Legendary'},
+  {days:150, emoji:'🦅', name:'Untouchable'},
+  {days:180, emoji:'🥇', name:'Half Year Hero'},
+  {days:210, emoji:'💍', name:'Wedding Mode'},
+  {days:240, emoji:'🎯', name:'Almost There'},
+  {days:270, emoji:'🔱', name:'Final Form'},
+  {days:300, emoji:'👔', name:'Wedding Ready'},
+  {days:330, emoji:'🌊', name:'Unstoppable Force'},
+  {days:365, emoji:'🏆💍', name:'WEDDING CHAMPION'},
+];
+
+function getTier(streak) {
+  let tier = null;
+  for (const t of TIERS) { if (streak >= t.days) tier = t; }
+  return tier;
+}
+
+function getNextTier(streak) {
+  return TIERS.find(t => t.days > streak);
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────────
+if (FIREBASE_OK) auth.onAuthStateChanged(async user => {
+  document.getElementById('loading').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').classList.add('visible');
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    await loadUserData();
+    await seedBaselineIfNeeded();
+    initApp();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-shell').classList.remove('visible');
+  }
+});
+
+document.getElementById('google-signin-btn').onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+};
+
+document.getElementById('signout-btn').onclick = () => auth.signOut();
+
+// ─── FIRESTORE HELPERS ─────────────────────────────────────────────
+function userRef() { return db.collection('users').doc(currentUser.uid); }
+
+async function loadUserData() {
+  const snap = await userRef().get();
+  userDoc = snap.exists ? snap.data() : {};
+  // Load body scans
+  const scansSnap = await userRef().collection('scans').orderBy('date','asc').get();
+  bodyScans = scansSnap.docs.map(d => ({id:d.id, ...d.data()}));
+}
+
+async function getCheckin(dateStr) {
+  const snap = await userRef().collection('checkins').doc(dateStr).get();
+  return snap.exists ? snap.data() : {};
+}
+
+async function setCheckin(dateStr, data) {
+  await userRef().collection('checkins').doc(dateStr).set(data, {merge:true});
+}
+
+async function getCheckins(startStr, endStr) {
+  const snap = await userRef().collection('checkins')
+    .where(firebase.firestore.FieldPath.documentId(), '>=', startStr)
+    .where(firebase.firestore.FieldPath.documentId(), '<=', endStr)
+    .get();
+  const result = {};
+  snap.docs.forEach(d => result[d.id] = d.data());
+  return result;
+}
+
+// ─── STREAK CALCULATION ────────────────────────────────────────────
+async function calculateStreak() {
+  const today = todayStr();
+  let streak = 0;
+  let graceUsed = false;
+  let checkDate = new Date(today + 'T12:00:00');
+
+  for (let i = 0; i < 400; i++) {
+    const ds = `${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;
+    const snap = await userRef().collection('checkins').doc(ds).get();
+    const data = snap.exists ? snap.data() : {};
+    const complete = isDayComplete(data);
+
+    if (complete) {
+      streak++;
+    } else if (!graceUsed && i > 0) {
+      graceUsed = true; // grace skip
+    } else {
+      break;
+    }
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  return streak;
+}
+
+function isDayComplete(data) {
+  if (!data) return false;
+  const mealsConfirmed = data.mealsConfirmed || [];
+  const hasTraining = data.gym || data.swim || data.rest;
+  return mealsConfirmed.length >= 3 && hasTraining;
+}
+
+function getDayStatus(data) {
+  if (!data || Object.keys(data).length === 0) return 'incomplete';
+  if (isDayComplete(data)) return 'complete';
+  const mealsConfirmed = data.mealsConfirmed || [];
+  const hasTraining = data.gym || data.swim || data.rest;
+  if (mealsConfirmed.length > 0 || hasTraining) return 'partial';
+  return 'incomplete';
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────
+async function initApp() {
+  const streak = await calculateStreak();
+  updateStreakUI(streak);
+  updateDashStats(streak);
+  renderCalendar();
+  renderWeeklyConsistency();
+  initCheckin();
+  renderBodyCharts();
+  renderScanHistory();
+  renderTierGrid(streak);
+  renderMealWeek();
+  initTrainingLog();
+
+  // Set today's date on pickers
+  const today = todayStr();
+  document.getElementById('checkin-date-picker').value = today;
+  document.getElementById('training-date-picker').value = today;
+  document.getElementById('scan-date').value = today;
+
+  // Days to wedding
+  const wedding = new Date('2027-04-26');
+  const now = new Date();
+  const diff = Math.ceil((wedding - now) / (1000 * 60 * 60 * 24));
+  document.getElementById('ds-days').textContent = diff;
+
+  // Latest body stats
+  if (bodyScans.length > 0) {
+    const latest = bodyScans[bodyScans.length - 1];
+    document.getElementById('ds-weight').textContent = latest.weight || '—';
+    document.getElementById('ds-bf').textContent = latest.bf ? latest.bf + '%' : '—';
+  }
+}
+
+function updateStreakUI(streak) {
+  const tier = getTier(streak);
+  const nextTier = getNextTier(streak);
+  const badge = tier ? tier.emoji : '💤';
+  const name = tier ? tier.name : 'Not started';
+  const pct = nextTier ? Math.round((streak / nextTier.days) * 100) : 100;
+  const nextText = nextTier ? `<strong>${nextTier.days - streak} days</strong> to ${nextTier.emoji} ${nextTier.name}` : '<strong>🏆 Maximum tier achieved!</strong>';
+
+  ['sh','sp'].forEach(prefix => {
+    const b = document.getElementById(`${prefix}-badge`);
+    const t = document.getElementById(`${prefix}-tier`);
+    const c = document.getElementById(`${prefix}-count`);
+    const n = document.getElementById(`${prefix}-next`);
+    const bar = document.getElementById(`${prefix}-bar`);
+    if (b) b.textContent = badge;
+    if (t) t.textContent = name;
+    if (c) c.textContent = streak;
+    if (n) n.innerHTML = nextText;
+    if (bar) bar.style.width = pct + '%';
+  });
+
+  document.getElementById('topbar-streak').textContent = `${badge} ${streak} days`;
+}
+
+async function updateDashStats(streak) {
+  document.getElementById('ds-streak').textContent = streak;
+
+  // This week stats
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}`;
+  const weekEndStr = todayStr();
+
+  const checkins = await getCheckins(weekStartStr, weekEndStr);
+  let mealsCount = 0, workoutsCount = 0;
+  Object.values(checkins).forEach(d => {
+    mealsCount += (d.mealsConfirmed || []).length;
+    if (d.gym || d.swim) workoutsCount++;
+  });
+  document.getElementById('ds-meals').textContent = mealsCount;
+  document.getElementById('ds-workouts').textContent = workoutsCount;
+}
+
+// ─── CALENDAR ──────────────────────────────────────────────────────
+async function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const title = document.getElementById('cal-month-title');
+  const today = new Date();
+  const todayDateStr = todayStr();
+
+  title.textContent = new Date(calYear, calMonth, 1).toLocaleDateString('en-US', {month:'long', year:'numeric'});
+
+  // Get all checkins for this month
+  const firstDay = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  const lastDay = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${new Date(calYear, calMonth+1, 0).getDate()}`;
+  const monthCheckins = await getCheckins(firstDay, lastDay);
+
+  grid.innerHTML = '';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-day-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  const firstDayOfMonth = new Date(calYear, calMonth, 1);
+  let startDay = firstDayOfMonth.getDay(); // 0=Sun
+  startDay = startDay === 0 ? 6 : startDay - 1; // Convert to Mon=0
+
+  for (let i = 0; i < startDay; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'cal-day empty';
+    grid.appendChild(empty);
+  }
+
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEl = document.createElement('div');
+    dayEl.className = 'cal-day';
+    const isPast = ds <= todayDateStr;
+    const isToday = ds === todayDateStr;
+    const isFuture = ds > todayDateStr;
+
+    const data = monthCheckins[ds];
+    let statusClass = 'incomplete';
+    if (isFuture) statusClass = 'future';
+    else if (data) statusClass = getDayStatus(data);
+
+    dayEl.classList.add(statusClass);
+    if (isToday) dayEl.classList.add('today');
+
+    const dots = document.createElement('div');
+    dots.className = 'cal-day-dots';
+    if (data && !isFuture) {
+      if ((data.mealsConfirmed||[]).length > 0) { const dot = document.createElement('div'); dot.className='cal-dot'; dot.style.background=getComputedStyle(document.documentElement).getPropertyValue('--green'); dots.appendChild(dot); }
+      if (data.gym||data.swim) { const dot = document.createElement('div'); dot.className='cal-dot'; dot.style.background=getComputedStyle(document.documentElement).getPropertyValue('--red'); dots.appendChild(dot); }
+    }
+
+    dayEl.innerHTML = `<div class="cal-day-num">${d}</div>`;
+    dayEl.appendChild(dots);
+    if (!isFuture) dayEl.onclick = () => jumpToCheckin(ds);
+    grid.appendChild(dayEl);
+  }
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function jumpToCheckin(dateStr) {
+  document.getElementById('checkin-date-picker').value = dateStr;
+  showPanel('checkin', document.querySelector('.nav-tab:nth-child(2)'));
+  loadCheckinForDate(dateStr);
+}
+
+// ─── WEEKLY CONSISTENCY ────────────────────────────────────────────
+async function renderWeeklyConsistency() {
+  const container = document.getElementById('weekly-consistency');
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+
+  const checkins = await getCheckins(days[0], days[6]);
+  container.innerHTML = '';
+
+  days.forEach(ds => {
+    const data = checkins[ds] || {};
+    const meals = (data.mealsConfirmed || []).length;
+    const training = (data.gym || data.swim || data.rest) ? 1 : 0;
+    const supps = [data.creatine, data.casein, data.magnesium].filter(Boolean).length;
+    const total = meals + training * 3 + supps;
+    const maxTotal = 6 + 3 + 3;
+    const pct = Math.round((total / maxTotal) * 100);
+    const isFuture = ds > todayStr();
+
+    const row = document.createElement('div');
+    row.className = 'consistency-row';
+    const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+    row.innerHTML = `
+      <div class="con-date">${formatDate(ds)}</div>
+      <div class="con-bar-wrap"><div class="con-bar" style="width:${isFuture?0:pct}%;background:${color};"></div></div>
+      <div class="con-score" style="color:${isFuture?'var(--muted2)':color}">${isFuture ? '—' : pct+'%'}</div>`;
+    container.appendChild(row);
+  });
+}
+
+// ─── CHECKIN ───────────────────────────────────────────────────────
+async function initCheckin() {
+  const picker = document.getElementById('checkin-date-picker');
+  picker.addEventListener('change', e => loadCheckinForDate(e.target.value));
+  await loadCheckinForDate(todayStr());
+}
+
+async function loadCheckinForDate(dateStr) {
+  checkinDate = dateStr;
+  document.getElementById('checkin-date-display').textContent = `Check-in · ${formatDate(dateStr)}`;
+  document.getElementById('ci-meal-date').textContent = `Confirming meals for ${formatDate(dateStr)}`;
+  checkinData = await getCheckin(dateStr);
+
+  // Update toggles
+  ['gym','swim','rest','creatine','casein','magnesium'].forEach(key => {
+    const btn = document.getElementById('toggle-' + key);
+    if (btn) {
+      if (checkinData[key]) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  });
+
+  // Notes
+  document.getElementById('daily-notes').value = checkinData.notes || '';
+
+  // Meals list
+  renderCheckinMeals();
+}
+
+const MEAL_SLOTS = [
+  {key:'preswim', label:'Pre-swim snack', time:'6:00 AM', defaultName:'Banana + small yogurt'},
+  {key:'breakfast', label:'Post-swim breakfast', time:'7:30 AM', defaultName:'Protein bowl + whey'},
+  {key:'lunch', label:'Lunch', time:'12:00 PM', defaultName:'Midday meal'},
+  {key:'pregym', label:'Pre-gym snack', time:'5:30 PM', defaultName:'Cottage cheese + rice cakes'},
+  {key:'postswim', label:'Post-gym dinner', time:'8:30 PM', defaultName:'Big protein dinner'},
+  {key:'bed', label:'Before bed', time:'10:30 PM', defaultName:'Casein + supplements'},
+];
+
+function renderCheckinMeals() {
+  const list = document.getElementById('ci-meals-list');
+  const confirmed = checkinData.mealsConfirmed || [];
+  list.innerHTML = '';
+  MEAL_SLOTS.forEach(slot => {
+    const isConfirmed = confirmed.includes(slot.key);
+    const row = document.createElement('div');
+    row.className = 'meal-slot-row';
+    row.innerHTML = `
+      <div class="meal-slot-info">
+        <div class="meal-slot-type">${slot.time} · ${slot.label}</div>
+        <div class="meal-slot-name">${slot.defaultName}</div>
+      </div>
+      <button class="meal-confirm-btn ${isConfirmed?'confirmed':''}" onclick="toggleMealConfirm('${slot.key}')">
+        ${isConfirmed ? '✓ Eaten' : 'Mark eaten'}
+      </button>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleMealConfirm(key) {
+  let confirmed = checkinData.mealsConfirmed || [];
+  if (confirmed.includes(key)) confirmed = confirmed.filter(k => k !== key);
+  else confirmed.push(key);
+  checkinData.mealsConfirmed = confirmed;
+  renderCheckinMeals();
+}
+
+function toggleCheckin(key) {
+  // For training, make them mutually exclusive with rest
+  if (key === 'rest') {
+    if (checkinData.rest) { checkinData.rest = false; }
+    else { checkinData.rest = true; checkinData.gym = false; checkinData.swim = false; }
+  } else if (key === 'gym' || key === 'swim') {
+    checkinData[key] = !checkinData[key];
+    if (checkinData[key]) checkinData.rest = false;
+  } else {
+    checkinData[key] = !checkinData[key];
+  }
+  // Update toggle buttons
+  ['gym','swim','rest','creatine','casein','magnesium'].forEach(k => {
+    const btn = document.getElementById('toggle-' + k);
+    if (btn) {
+      if (checkinData[k]) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  });
+}
+
+async function saveCheckin() {
+  const btn = document.getElementById('save-checkin-btn');
+  checkinData.notes = document.getElementById('daily-notes').value;
+  checkinData.updatedAt = new Date().toISOString();
+  await setCheckin(checkinDate, checkinData);
+  btn.textContent = '✓ Saved!';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = 'Save Check-in'; btn.classList.remove('saved'); }, 2000);
+  // Recalculate streak
+  const streak = await calculateStreak();
+  updateStreakUI(streak);
+  updateDashStats(streak);
+  renderCalendar();
+  renderTierGrid(streak);
+}
+
+// ─── TRAINING LOG ──────────────────────────────────────────────────
+const WORKOUT_EXERCISES = {
+  push:['Barbell Bench Press','Incline Dumbbell Press','Overhead Press (Barbell)','Cable Lateral Raise','Chest Fly (Cable or Dumbbell)','Tricep Rope Pushdown'],
+  pull:['Pull-ups / Lat Pulldown','Barbell Row','Seated Cable Row','Single Arm Dumbbell Row','Face Pull','Dumbbell Bicep Curl','Hammer Curl'],
+  legs:['Barbell Back Squat','Romanian Deadlift','Leg Press','Walking Lunges','Leg Curl (Machine)','Calf Raises (Standing)'],
+  upper:['Dumbbell Bench Press','Chest-Supported Row','Arnold Press','Cable Crossover','Dumbbell Lateral Raise','Hammer Curl','Tricep Rope Pushdown'],
+  swim:['Warm-up','Main set','Cool-down'],
+  rest:[],
+};
+
+function initTrainingLog() {
+  document.getElementById('training-date-picker').addEventListener('change', loadTrainingLog);
+  document.getElementById('training-type-select').addEventListener('change', loadTrainingLog);
+  loadTrainingLog();
+}
+
+async function loadTrainingLog() {
+  const dateStr = document.getElementById('training-date-picker').value;
+  const type = document.getElementById('training-type-select').value;
+  const content = document.getElementById('training-log-content');
+
+  if (type === 'rest') {
+    content.innerHTML = '<div class="empty-state"><div class="empty-icon">😴</div><div class="empty-text">Rest day — recovery is training</div></div>';
+    return;
+  }
+
+  const exercises = WORKOUT_EXERCISES[type] || [];
+  const snap = await userRef().collection('trainingLogs').doc(dateStr + '-' + type).get();
+  const existing = snap.exists ? snap.data() : {};
+
+  let html = '';
+  if (type === 'swim') {
+    html = exercises.map(ex => `
+      <div class="exercise-log-row">
+        <div class="ex-log-header">
+          <div class="ex-log-name">${ex}</div>
+          <div class="ex-log-planned">Log your swim notes</div>
+        </div>
+        <textarea class="notes-area" id="swim-${ex.replace(/\s+/g,'_')}" style="min-height:60px;" placeholder="e.g. 4×50m easy, felt strong...">${existing['swim_'+ex.replace(/\s+/g,'_')] || ''}</textarea>
+      </div>`).join('');
+  } else {
+    html = exercises.map(ex => {
+      const exKey = ex.replace(/[\s\/\(\)]+/g,'_');
+      const sets = [1,2,3,4].map(s => {
+        const setData = existing[exKey + '_set' + s] || {};
+        return `<div class="set-input-group">
+          <div class="set-label">Set ${s}</div>
+          <input class="set-input" type="number" placeholder="lbs" id="${exKey}_w${s}" value="${setData.weight||''}">
+          <input class="set-input" type="number" placeholder="reps" id="${exKey}_r${s}" value="${setData.reps||''}" style="margin-top:4px;">
+        </div>`;
+      }).join('');
+      return `<div class="exercise-log-row">
+        <div class="ex-log-header">
+          <div class="ex-log-name">${ex}</div>
+          <div class="ex-log-planned">Weight (lbs) · Reps</div>
+        </div>
+        <div class="set-inputs">${sets}</div>
+      </div>`;
+    }).join('');
+  }
+
+  html += `<button class="save-btn" id="save-training-btn" onclick="saveTrainingLog('${dateStr}','${type}')">Save Training Log</button>`;
+  content.innerHTML = html;
+  renderLiftHistory();
+}
+
+async function saveTrainingLog(dateStr, type) {
+  const btn = document.getElementById('save-training-btn');
+  const exercises = WORKOUT_EXERCISES[type] || [];
+  const data = { date: dateStr, type, savedAt: new Date().toISOString() };
+
+  if (type === 'swim') {
+    exercises.forEach(ex => {
+      const el = document.getElementById('swim_' + ex.replace(/\s+/g,'_'));
+      if (el) data['swim_' + ex.replace(/\s+/g,'_')] = el.value;
+    });
+  } else {
+    exercises.forEach(ex => {
+      const exKey = ex.replace(/[\s\/\(\)]+/g,'_');
+      [1,2,3,4].forEach(s => {
+        const w = document.getElementById(exKey + '_w' + s);
+        const r = document.getElementById(exKey + '_r' + s);
+        if (w && r && (w.value || r.value)) {
+          data[exKey + '_set' + s] = { weight: w.value, reps: r.value };
+        }
+      });
+    });
+  }
+
+  await userRef().collection('trainingLogs').doc(dateStr + '-' + type).set(data);
+  btn.textContent = '✓ Saved!';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = 'Save Training Log'; btn.classList.remove('saved'); }, 2000);
+  renderLiftHistory();
+}
+
+async function renderLiftHistory() {
+  const container = document.getElementById('lift-history');
+  const type = document.getElementById('training-type-select').value;
+  if (type === 'rest' || type === 'swim') { container.innerHTML = ''; return; }
+
+  // Query only by type (no composite index needed), sort in JS
+  const snap = await userRef().collection('trainingLogs').where('type','==',type).get();
+  if (snap.empty) { container.innerHTML = '<div class="empty-state"><div class="empty-text">No history yet for this workout</div></div>'; return; }
+
+  let logs = snap.docs.map(d => d.data());
+  logs.sort((a,b) => (a.date > b.date ? 1 : -1)); // ascending by date
+  logs = logs.slice(-8); // last 8 sessions
+  const exercises = WORKOUT_EXERCISES[type] || [];
+  const ex = exercises[0]; // Show first compound lift as the headline
+  const exKey = ex.replace(/[\s\/\(\)]+/g,'_');
+
+  let html = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Showing <strong style="color:var(--text);">${ex}</strong> — Set 1 progression</div>`;
+  logs.forEach(log => {
+    const set1 = log[exKey + '_set1'] || {};
+    const weight = set1.weight || '—';
+    const reps = set1.reps || '—';
+    html += `<div class="consistency-row">
+      <div class="con-date">${formatDate(log.date)}</div>
+      <div style="flex:1;font-size:13px;color:var(--text);">${weight} lbs × ${reps} reps</div>
+      <div style="font-size:11px;color:var(--muted);">Set 1</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ─── BODY COMP ────────────────────────────────────────────────────
+async function saveBodyScan() {
+  const date = document.getElementById('scan-date').value;
+  const scan = {
+    date,
+    weight: parseFloat(document.getElementById('inp-weight').value) || null,
+    bf: parseFloat(document.getElementById('inp-bf').value) || null,
+    muscle: parseFloat(document.getElementById('inp-muscle').value) || null,
+    score: parseInt(document.getElementById('inp-score').value) || null,
+    fatmass: parseFloat(document.getElementById('inp-fatmass').value) || null,
+    savedAt: new Date().toISOString(),
+  };
+  await userRef().collection('scans').doc(date).set(scan);
+  // Reload scans
+  const snap = await userRef().collection('scans').orderBy('date','asc').get();
+  bodyScans = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  renderBodyCharts();
+  renderScanHistory();
+  // Update topbar
+  if (bodyScans.length > 0) {
+    const latest = bodyScans[bodyScans.length-1];
+    document.getElementById('ds-weight').textContent = latest.weight || '—';
+    document.getElementById('ds-bf').textContent = latest.bf ? latest.bf + '%' : '—';
+  }
+  alert('Scan saved!');
+}
+
+function renderBodyCharts() {
+  if (bodyScans.length === 0) return;
+  const labels = bodyScans.map(s => formatDate(s.date));
+  const WEDDING = new Date('2027-04-26');
+
+  // Goals for reference lines
+  const goals = { weight: 177, bf: 21, muscle: 81, score: 77 };
+
+  function makeChart(canvasId, label, data, color, goal) {
+    if (charts[canvasId]) charts[canvasId].destroy();
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    const datasets = [{
+      label,
+      data,
+      borderColor: color,
+      backgroundColor: color + '22',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: color,
+      pointRadius: 5,
+    }];
+    if (goal) datasets.push({
+      label: 'Target',
+      data: Array(data.length).fill(goal),
+      borderColor: 'rgba(58,170,106,0.5)',
+      borderDash: [6,3],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: false,
+    });
+    charts[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#666', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      }
+    });
+  }
+
+  makeChart('chart-weight', 'Weight (lbs)', bodyScans.map(s => s.weight), '#e03535', goals.weight);
+  makeChart('chart-bf', 'Body Fat %', bodyScans.map(s => s.bf), '#e8a020', goals.bf);
+  makeChart('chart-muscle', 'Muscle Mass (lbs)', bodyScans.map(s => s.muscle), '#3aaa6a', goals.muscle);
+  makeChart('chart-score', 'InBody Score', bodyScans.map(s => s.score), '#3a7fd5', goals.score);
+}
+
+function renderScanHistory() {
+  const container = document.getElementById('scan-history-list');
+  if (bodyScans.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">No scans logged yet</div><div class="empty-sub">Log your first InBody scan above</div></div>';
+    return;
+  }
+  const rows = [...bodyScans].reverse().map(s => `
+    <div class="consistency-row" style="flex-wrap:wrap;gap:12px;">
+      <div class="con-date">${formatDate(s.date)}</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
+        ${s.weight ? `<span><span style="color:var(--muted);font-size:11px;">Weight</span> <strong>${s.weight} lb</strong></span>` : ''}
+        ${s.bf ? `<span><span style="color:var(--muted);font-size:11px;">BF%</span> <strong style="color:var(--amber);">${s.bf}%</strong></span>` : ''}
+        ${s.muscle ? `<span><span style="color:var(--muted);font-size:11px;">Muscle</span> <strong style="color:var(--green);">${s.muscle} lb</strong></span>` : ''}
+        ${s.score ? `<span><span style="color:var(--muted);font-size:11px;">Score</span> <strong style="color:var(--blue);">${s.score}</strong></span>` : ''}
+      </div>
+    </div>`).join('');
+  container.innerHTML = rows;
+
+  // Add baseline if first entry
+  if (bodyScans.length === 1 && bodyScans[0].date === '2026-03-30') {
+    container.innerHTML = `<div style="padding:10px 0;font-size:11px;color:var(--green);margin-bottom:8px;">📍 Baseline scan — March 30, 2026</div>` + rows;
+  }
+}
+
+// ─── MEAL WEEK ────────────────────────────────────────────────────
+async function renderMealWeek() {
+  const grid = document.getElementById('weekly-meal-grid');
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const checkins = {};
+
+  // Load this week's checkins
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const data = await getCheckin(ds);
+    checkins[ds] = data;
+  }
+
+  grid.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const data = checkins[ds] || {};
+    const confirmed = data.mealsConfirmed || [];
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;';
+    const isToday = ds === todayStr();
+    if (isToday) card.style.borderColor = 'var(--red)';
+
+    const slots = confirmed.map(k => {
+      const slot = MEAL_SLOTS.find(s => s.key === k);
+      return slot ? `<div style="font-size:11px;color:var(--green);padding:3px 0;border-bottom:1px solid var(--border);">✓ ${slot.label}</div>` : '';
+    }).join('');
+
+    card.innerHTML = `
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;margin-bottom:6px;color:${isToday?'var(--red)':'var(--text)'};">${days[i]}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">${confirmed.length}/6 meals</div>
+      ${slots || '<div style="font-size:11px;color:var(--muted2);">No meals logged</div>'}`;
+    grid.appendChild(card);
+  }
+
+  // Meal log list
+  const logList = document.getElementById('meal-log-list');
+  let logHtml = '';
+  const allDates = Object.keys(checkins).sort().reverse();
+  allDates.forEach(ds => {
+    const data = checkins[ds] || {};
+    const confirmed = data.mealsConfirmed || [];
+    if (confirmed.length > 0) {
+      logHtml += `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">${formatDate(ds)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${confirmed.map(k => {
+            const slot = MEAL_SLOTS.find(s => s.key === k);
+            return `<span style="font-size:11px;padding:3px 10px;border-radius:4px;background:var(--green-dim);color:var(--green);">${slot?slot.label:k}</span>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  });
+  logList.innerHTML = logHtml || '<div class="empty-state"><div class="empty-text">No meals confirmed this week yet</div></div>';
+}
+
+// ─── TIER GRID ────────────────────────────────────────────────────
+function renderTierGrid(streak) {
+  const grid = document.getElementById('tier-grid');
+  grid.innerHTML = '';
+  const currentTier = getTier(streak);
+  TIERS.forEach(tier => {
+    const achieved = streak >= tier.days;
+    const isCurrent = currentTier && currentTier.days === tier.days;
+    const card = document.createElement('div');
+    card.className = 'tier-card' + (achieved ? ' achieved' : '') + (isCurrent ? ' current' : '');
+    card.innerHTML = `
+      <div class="tier-emoji">${tier.emoji}</div>
+      <div class="tier-info">
+        <div class="tier-days">${tier.days} days</div>
+        <div class="tier-name">${tier.name}</div>
+      </div>
+      ${achieved ? '<div class="tier-check">✓</div>' : ''}`;
+    grid.appendChild(card);
+  });
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+id+"'")) t.classList.add('active');
+    });
+  }
+  if (id === 'body') { renderBodyCharts(); renderScanHistory(); }
+  if (id === 'meals') renderMealWeek();
+  if (id === 'training') renderLiftHistory();
+  if (id === 'dashboard') { renderCalendar(); renderWeeklyConsistency(); }
+}
+
+// ─── SEED BASELINE ────────────────────────────────────────────────
+// Auto-seed the March 30 baseline scan if no scans exist
+async function seedBaselineIfNeeded() {
+  if (bodyScans.length === 0) {
+    await userRef().collection('scans').doc('2026-03-30').set({
+      date:'2026-03-30', weight:198.9, bf:32.6, muscle:75.6, score:60, fatmass:64.8,
+      savedAt: new Date().toISOString()
+    });
+    const snap = await userRef().collection('scans').orderBy('date','asc').get();
+    bodyScans = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderBodyCharts();
+    renderScanHistory();
+    if (bodyScans.length > 0) {
+      const latest = bodyScans[bodyScans.length-1];
+      document.getElementById('ds-weight').textContent = latest.weight || '—';
+      document.getElementById('ds-bf').textContent = latest.bf ? latest.bf + '%' : '—';
+    }
+  }
+}
+</script>
+</body>
+</html>
