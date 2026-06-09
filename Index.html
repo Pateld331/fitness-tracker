@@ -360,6 +360,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font
         <option value="legs">Legs — Quads / Hams / Glutes</option>
         <option value="upper">Upper — Hypertrophy</option>
         <option value="swim">Swim Session</option>
+        <option value="yoga">Yoga / Mobility (Sat)</option>
         <option value="rest">Rest Day</option>
       </select>
       <button onclick="loadTrainingLog()" style="padding:6px 16px;background:var(--red);border:none;border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;font-size:13px;cursor:pointer;">Load</button>
@@ -915,10 +916,11 @@ async function saveCheckin() {
 // ─── TRAINING LOG ──────────────────────────────────────────────────
 const WORKOUT_EXERCISES = {
   push:['Flat Dumbbell Press','Incline Dumbbell Press','Overhead Press (Standing)','Cable Lateral Raise','Chest Fly (Cable or Dumbbell)','Tricep Rope Pushdown'],
-  pull:['Pull-ups / Lat Pulldown','Barbell Row','Seated Cable Row','Single Arm Dumbbell Row','Face Pull','Dumbbell Bicep Curl','Hammer Curl'],
-  legs:['Barbell Back Squat','Romanian Deadlift','Leg Press','Walking Lunges','Leg Curl (Machine)','Calf Raises (Standing)'],
+  pull:['Pull-ups / Lat Pulldown','Barbell Row','Seated Cable Row','Single Arm Dumbbell Row','Face Pull','Dumbbell Bicep Curl','Hammer Curl',"Farmer's Carry"],
+  legs:['Goblet Squat','Barbell Back Squat','Romanian Deadlift','Leg Press','Hip Thrust','Walking Lunges','Leg Curl (Machine)','Calf Raises (Standing)','Kettlebell Swing'],
   upper:['Dumbbell Bench Press','Chest-Supported Row','Arnold Press','Cable Crossover','Dumbbell Lateral Raise','Hammer Curl','Tricep Rope Pushdown'],
   swim:['Warm-up','Main set','Cool-down'],
+  yoga:['Session notes'],
   rest:[],
 };
 
@@ -943,14 +945,15 @@ async function loadTrainingLog() {
   const existing = snap.exists ? snap.data() : {};
 
   let html = '';
-  if (type === 'swim') {
+  if (type === 'swim' || type === 'yoga') {
+    const ph = type === 'swim' ? 'e.g. 4×50m easy, felt strong...' : 'e.g. 40 min Adriene hip flow, hips felt tight...';
     html = exercises.map(ex => `
       <div class="exercise-log-row">
         <div class="ex-log-header">
           <div class="ex-log-name">${ex}</div>
-          <div class="ex-log-planned">Log your swim notes</div>
+          <div class="ex-log-planned">Log your notes</div>
         </div>
-        <textarea class="notes-area" id="swim-${ex.replace(/\s+/g,'_')}" style="min-height:60px;" placeholder="e.g. 4×50m easy, felt strong...">${existing['swim_'+ex.replace(/\s+/g,'_')] || ''}</textarea>
+        <textarea class="notes-area" id="swim_${ex.replace(/\s+/g,'_')}" style="min-height:60px;" placeholder="${ph}">${existing['swim_'+ex.replace(/\s+/g,'_')] || ''}</textarea>
       </div>`).join('');
   } else {
     html = exercises.map(ex => {
@@ -983,7 +986,7 @@ async function saveTrainingLog(dateStr, type) {
   const exercises = WORKOUT_EXERCISES[type] || [];
   const data = { date: dateStr, type, savedAt: new Date().toISOString() };
 
-  if (type === 'swim') {
+  if (type === 'swim' || type === 'yoga') {
     exercises.forEach(ex => {
       const el = document.getElementById('swim_' + ex.replace(/\s+/g,'_'));
       if (el) data['swim_' + ex.replace(/\s+/g,'_')] = el.value;
@@ -1011,7 +1014,7 @@ async function saveTrainingLog(dateStr, type) {
 async function renderLiftHistory() {
   const container = document.getElementById('lift-history');
   const type = document.getElementById('training-type-select').value;
-  if (type === 'rest' || type === 'swim') { container.innerHTML = ''; return; }
+  if (type === 'rest' || type === 'swim' || type === 'yoga') { container.innerHTML = ''; return; }
 
   // Query only by type (no composite index needed), sort in JS
   const snap = await userRef().collection('trainingLogs').where('type','==',type).get();
